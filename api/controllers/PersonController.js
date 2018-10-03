@@ -7,7 +7,7 @@
 
 module.exports = {
   // action - create
-ccreate: async function (req, res) {
+create: async function (req, res) {
 
     if (req.method == "GET")
         return res.view('person/create');
