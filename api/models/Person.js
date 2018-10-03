@@ -12,12 +12,12 @@ module.exports = {
     //  ╔═╗╦═╗╦╔╦╗╦╔╦╗╦╦  ╦╔═╗╔═╗
     //  ╠═╝╠╦╝║║║║║ ║ ║╚╗╔╝║╣ ╚═╗
     //  ╩  ╩╚═╩╩ ╩╩ ╩ ╩ ╚╝ ╚═╝╚═╝
-name:{
-  type:"string"
-},
-age:{
-  type:"string"
-}
+    name: {
+      type: "string"
+    },
+    age: {
+      type: "number"
+    },
 
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗
@@ -30,6 +30,13 @@ age:{
     //  ╩ ╩╚═╝╚═╝╚═╝╚═╝╩╩ ╩ ╩ ╩╚═╝╝╚╝╚═╝
 
   },
+  getInvalidIdMsg: function (opts) {
 
+    if (typeof opts.id === "undefined" || isNaN(parseInt(opts.id)))
+      return "Person id not specified or with incorrect type.";
+
+    return null;        // falsy
+
+  },
 };
 
