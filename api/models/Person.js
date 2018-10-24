@@ -29,6 +29,11 @@ module.exports = {
     //  ╠═╣╚═╗╚═╗║ ║║  ║╠═╣ ║ ║║ ║║║║╚═╗
     //  ╩ ╩╚═╝╚═╝╚═╝╚═╝╩╩ ╩ ╩ ╩╚═╝╝╚╝╚═╝
 
+    worksFor: {
+      collection: 'User',
+      via: 'supervises'
+    }
+
   },
   getInvalidIdMsg: function (opts) {
 

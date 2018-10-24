@@ -6,128 +6,145 @@
  */
 
 module.exports = {
-  // action - create
-create: async function (req, res) {
+    // action - create
+    create: async function (req, res) {
 
-    if (req.method == "GET")
-        return res.view('person/create');
+        if (req.method == "GET")
+            return res.view('person/create');
 
-    if (typeof req.body.Person === "undefined")
-        return res.badRequest("Form-data not received.");
+        if (typeof req.body.Person === "undefined")
+            return res.badRequest("Form-data not received.");
 
-    await Person.create(req.body.Person);
+        await Person.create(req.body.Person);
 
-    return res.ok("Successfully created!");
-},
+        return res.ok("Successfully created!");
+    },
 
-// action - index
-index: async function (req, res) {
+    // action - index
+    index: async function (req, res) {
 
-    var persons = await Person.find();
-    return res.view('person/index', { 'persons': persons });
-    
-},
-view: async function (req, res) {
+        var persons = await Person.find();
+        return res.view('person/index', { 'persons': persons });
 
-    var message = Person.getInvalidIdMsg(req.params);
+    },
+    view: async function (req, res) {
 
-    if (message) return res.badRequest(message);
+        var message = Person.getInvalidIdMsg(req.params);
 
-    var model = await Person.findOne(req.params.id);
-
-    if (!model) return res.notFound();
-
-    return res.view('person/view', { 'person': model });
-
-},
-// action - delete 
-delete: async function (req, res) {
-
-    if (req.method == "GET") return res.forbidden();
-
-    var message = Person.getInvalidIdMsg(req.params);
-
-    if (message) return res.badRequest(message);
-
-    var models = await Person.destroy(req.params.id).fetch();
-
-    if (models.length == 0) return res.notFound();
-
-    return res.ok("Person Deleted.");
-
-},
-// action - update
-update: async function (req, res) {
-
-    var message = Person.getInvalidIdMsg(req.params);
-
-    if (message) return res.badRequest(message);
-
-    if (req.method == "GET") {
+        if (message) return res.badRequest(message);
 
         var model = await Person.findOne(req.params.id);
 
         if (!model) return res.notFound();
 
-        return res.view('person/update', { 'person': model });
+        return res.view('person/view', { 'person': model });
 
-    } else {
+    },
+    // action - delete 
+    delete: async function (req, res) {
 
-        if (typeof req.body.Person === "undefined")
-            return res.badRequest("Form-data not received.");
+        if (req.method == "GET") return res.forbidden();
 
-        var models = await Person.update(req.params.id).set({
-            name: req.body.Person.name,
-            age: req.body.Person.age
-        }).fetch();
+        var message = Person.getInvalidIdMsg(req.params);
+
+        if (message) return res.badRequest(message);
+
+        var models = await Person.destroy(req.params.id).fetch();
 
         if (models.length == 0) return res.notFound();
 
-        return res.ok("Record updated");
+        return res.ok("Person Deleted.");
 
-    }
-},
-// action - search
-// search function
-search: async function (req, res) {
+    },
+    // action - update
+    update: async function (req, res) {
 
-    const qName = req.query.name || "";
-    const qAge = parseInt(req.query.age);
+        var message = Person.getInvalidIdMsg(req.params);
 
-    if (isNaN(qAge)) {
+        if (message) return res.badRequest(message);
+
+        if (req.method == "GET") {
+
+            var model = await Person.findOne(req.params.id);
+
+            if (!model) return res.notFound();
+
+            return res.view('person/update', { 'person': model });
+
+        } else {
+
+            if (typeof req.body.Person === "undefined")
+                return res.badRequest("Form-data not received.");
+
+            var models = await Person.update(req.params.id).set({
+                name: req.body.Person.name,
+                age: req.body.Person.age
+            }).fetch();
+
+            if (models.length == 0) return res.notFound();
+
+            return res.ok("Record updated");
+
+        }
+    },
+    // action - search
+    // search function
+    search: async function (req, res) {
+
+        const qName = req.query.name || "";
+        const qAge = parseInt(req.query.age);
+
+        if (isNaN(qAge)) {
+
+            var persons = await Person.find({
+                where: { name: { contains: qName } },
+                sort: 'name'
+            });
+
+        } else {
+
+            var persons = await Person.find({
+                where: { name: { contains: qName }, age: qAge },
+                sort: 'name'
+            });
+
+        }
+
+        return res.view('person/index', { 'persons': persons });
+    },
+    // action - paginate
+    // action - paginate
+    paginate: async function (req, res) {
+
+        const qPage = Math.max(req.query.page - 1, 0) || 0;
+
+        const numOfItemsPerPage = 2;
 
         var persons = await Person.find({
-            where: { name: { contains: qName } },
-            sort: 'name'
+            limit: numOfItemsPerPage,
+            skip: numOfItemsPerPage * qPage
         });
 
-    } else {
+        var numOfPage = Math.ceil(await Person.count() / numOfItemsPerPage);
 
-        var persons = await Person.find({
-            where: { name: { contains: qName }, age: qAge },
-            sort: 'name'
-        });
+        return res.view('person/paginate', { 'persons': persons, 'count': numOfPage });
+    },
 
-    }
+    populate: async function (req, res) {
 
-    return res.view('person/index', { 'persons': persons });
-},
-// action - paginate
-// action - paginate
-paginate: async function (req, res) {
+        if (!['worksFor'].includes(req.params.association)) return res.notFound();
 
-    const qPage = Math.max(req.query.page - 1, 0) || 0;
+        const message = sails.getInvalidIdMsg(req.params);
 
-    const numOfItemsPerPage = 2;
+        if (message) return res.badRequest(message);
 
-    var persons = await Person.find({
-        limit: numOfItemsPerPage, 
-        skip: numOfItemsPerPage * qPage
-    });
+        var model = await Person.findOne(req.params.id).populate(req.params.association);
 
-    var numOfPage = Math.ceil(await Person.count() / numOfItemsPerPage);
+        if (!model) return res.notFound();
 
-    return res.view('person/paginate', { 'persons': persons, 'count': numOfPage });
-},
+        return res.json(model);
+
+    },
+    
 };
 
