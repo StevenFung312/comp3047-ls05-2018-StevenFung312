@@ -48,21 +48,18 @@ module.exports.bootstrap = async function (done) {
   if (await Person.count() > 0) {
     return done();
   }
-
   await Person.createEach([
-    { name: "Martin Choy", age: 23 },
-    { name: "Kenny Cheng", age: 22 }
+    { name: "Martin Choy", age: 23, birthDate: new Date('2000/01/01') },
+    { name: "Kenny Cheng", age: 22, birthDate: new Date('2000/02/02') }
     // etc.
-  ]);
+]);
+const hash = await sails.bcrypt.hash('123456', saltRounds);
 
-  const hash = await sails.bcrypt.hash('123456', saltRounds);
-
-  await User.createEach([
+await User.createEach([
     { "username": "admin", "password": hash },
     { "username": "boss", "password": hash }
     // etc.
-  ]);
-
+]);
   const martin = await Person.findOne({ name: "Martin Choy" });
   const kenny = await Person.findOne({ name: "Kenny Cheng" });
   const admin = await User.findOne({ username: "admin" });
